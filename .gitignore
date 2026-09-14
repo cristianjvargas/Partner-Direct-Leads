@@ -30,3 +30,9 @@ COMPLIANCE-CHECK.md
 /leads/
 /statements/
 dist/
+
+# Your working tracker holds real names and phone numbers for 150-300 people.
+# Only the blank TEMPLATE is committed. Keep the filled copy local.
+tracker/Partner-Direct-Tracker.xlsx
+tracker/*-working.xlsx
+tracker/*-filled.xlsx
