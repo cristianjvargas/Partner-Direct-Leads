@@ -44,6 +44,13 @@ OUTCOMES = ["Conversation", "No answer", "Left voicemail",
             "Not interested", "Wrong timing"]
 JEREMY = ["Sent", "Jeremy contacted", "In progress",
           "Closed won", "Closed lost", "No response"]
+SOURCES = ["Warm list", "Tier 4 referral", "Referral partner",
+           "Inbound - page", "Inbound - social", "Event"]
+PARTNER_TYPES = ["Business broker", "POS installer", "Bookkeeper / CPA",
+                 "Liquor / food rep", "Consultant", "Commercial broker / landlord",
+                 "Route vendor (linen, uniform, waste, pest)", "Other"]
+PARTNER_STATUS = ["Not contacted", "Contacted", "Agreed to refer",
+                  "Active - has sent one", "Cold"]
 YN = ["Y", "N"]
 
 
@@ -106,6 +113,7 @@ SECTIONS = [
         "Call Log — every conversation, logged the same day. Week one has no exceptions; the habit is the point.",
         "Referral Log — every handoff to Jeremy, including the ones that die. Rule 05: track your no's like they're wins.",
         "Objections — what you actually hear. Review with Jeremy weekly and find the two you keep hitting.",
+        "Referral Partners — people who already walk into businesses you cannot reach. Give before you ask.",
         "Dashboard — targets vs. actual, pulled automatically from the logs. Set your Week 1 start date there.",
     ]),
     ("Colour key", [
@@ -237,25 +245,28 @@ note(ws, "A1", "Every handoff to Jeremy, including the ones that die. Rule 05: t
                "Bring this to the Friday call.", size=10, bold=True, color=ACCENT)
 ws.merge_cells("A1:J1")
 
-hdrs = ["Date sent", "Name", "Business", "Phone", "What they're running",
-        "Sent merchant the heads-up text?", "Jeremy status",
+hdrs = ["Date sent", "Source", "Sourced by", "Name", "Business", "Phone",
+        "What they're running", "Sent merchant the heads-up text?", "Jeremy status",
         "Why it didn't work", "Date closed", "Notes"]
-widths = [12, 20, 24, 15, 26, 26, 18, 34, 12, 30]
+widths = [12, 18, 20, 20, 24, 15, 24, 26, 18, 32, 12, 28]
 style_header(ws, 2, hdrs, widths)
-example_row(ws, 3, [date(2026, 9, 15), "Marco Ruiz", "Ruiz Hospitality Group", "305-555-0142",
-                    "Toast", "Y", "Jeremy contacted", "", "", "Wants to wait for contract end in March"])
+example_row(ws, 3, [date(2026, 9, 15), "Referral partner", "Dani (Breakthru liquor rep)",
+                    "Marco Ruiz", "Ruiz Hospitality Group", "305-555-0142",
+                    "Toast", "Y", "Jeremy contacted", "", "",
+                    "Wants to wait for contract end in March"])
 
 for row in range(3, 401):
-    for col in "ABCDEFGHIJ":
+    for col in "ABCDEFGHIJKL":
         c = ws[f"{col}{row}"]
         c.font = Font(name=FONT, size=10, color=INK)
         if row > 3:
             c.fill = PatternFill("solid", fgColor=INPUT_FILL)
     ws[f"A{row}"].number_format = "mm/dd/yyyy"
-    ws[f"I{row}"].number_format = "mm/dd/yyyy"
+    ws[f"K{row}"].number_format = "mm/dd/yyyy"
 
-add_dv(ws, YN, "F")
-add_dv(ws, JEREMY, "G")
+add_dv(ws, SOURCES, "B")
+add_dv(ws, YN, "H")
+add_dv(ws, JEREMY, "I")
 
 # ----------------------------------------------------------- Objections
 ws = wb.create_sheet("Objections")
@@ -283,6 +294,53 @@ for row in range(3, 301):
     ws[f"A{row}"].number_format = "mm/dd/yyyy"
 
 add_dv(ws, SEGMENTS, "C", last=300)
+
+# --------------------------------------------------- Referral Partners
+ws = wb.create_sheet("Referral Partners")
+note(ws, "A1", "People who already walk into the businesses you cannot reach. One liquor rep touches "
+               "15 accounts a week. Give before you ask - column K is the discipline, not a nicety. "
+               "Priority fills itself from Type.",
+     size=10, bold=True, color=ACCENT)
+ws.merge_cells("A1:N1")
+ws.row_dimensions[1].height = 28
+
+hdrs = ["Partner name", "Type", "Priority", "Company", "How I know them",
+        "Phone", "Email", "Accounts they touch", "Status", "Last contact",
+        "Last thing I gave them", "Date I gave it", "Referrals received", "Notes"]
+widths = [20, 26, 14, 22, 24, 15, 22, 16, 20, 13, 28, 13, 15, 28]
+style_header(ws, 2, hdrs, widths)
+
+example_row(ws, 3, ["Dani Restrepo", "Liquor / food rep", "", "Breakthru Beverage",
+                    "Comped her table at LIV for years", "305-555-0178",
+                    "dani@example.com", "15/wk", "Agreed to refer", "",
+                    "Sent her Marco's number for a tasting", "", "",
+                    "Asked her to flag any spot changing hands"])
+
+for row in range(3, 201):
+    # Priority ranks by how close the partner sits to a moment a merchant re-decides.
+    ws["C%d" % row] = (
+        '=IF(B{r}="","",'
+        'IF(B{r}="Business broker","1 - Highest",'
+        'IF(OR(B{r}="POS installer",B{r}="Bookkeeper / CPA"),"2 - High",'
+        'IF(OR(B{r}="Liquor / food rep",B{r}="Consultant"),"3 - Strong",'
+        'IF(B{r}="Other","5 - Other","4 - Good")))))'
+    ).format(r=row)
+    ws["M%d" % row] = (
+        '=IF(A{r}="","",COUNTIF(\'Referral Log\'!$C$4:$C$400,A{r}))'
+    ).format(r=row)
+    for col in ("C", "M"):
+        ws["%s%d" % (col, row)].fill = PatternFill("solid", fgColor=CALC_FILL)
+        ws["%s%d" % (col, row)].font = Font(name=FONT, size=10, color=INK)
+    for col in "ABDEFGHIJKLN":
+        c = ws["%s%d" % (col, row)]
+        c.font = Font(name=FONT, size=10, color=INK)
+        if row > 3:
+            c.fill = PatternFill("solid", fgColor=INPUT_FILL)
+    ws["J%d" % row].number_format = "mm/dd/yyyy"
+    ws["L%d" % row].number_format = "mm/dd/yyyy"
+
+add_dv(ws, PARTNER_TYPES, "B", last=200)
+add_dv(ws, PARTNER_STATUS, "I", last=200)
 
 # ------------------------------------------------------------ Dashboard
 ws = wb.create_sheet("Dashboard")
@@ -344,7 +402,7 @@ r += 1
 SUMMARY = [
     ("Conversations", "=SUM(F7:F10)", "60-70 is a good month"),
     ("Referrals sent", "=SUM(H7:H10)", "18-20"),
-    ("Accounts closed", "=COUNTIF('Referral Log'!$G$4:$G$400,\"Closed won\")", "2-4"),
+    ("Accounts closed", "=COUNTIF('Referral Log'!$I$4:$I$400,\"Closed won\")", "2-4"),
     ("Names harvested", "=SUM(J7:J10)", "feeds Tier 4"),
     ("Tier 4 names on list", "=COUNTIF('Reconnect Sprint'!$D$4:$D$400,\"4 - Harvested referral\")",
      "if this stays 0, you aren't asking the referral question"),
@@ -352,6 +410,14 @@ SUMMARY = [
                                 "\"\",COUNTIF('Call Log'!$F$4:$F$600,\"Y\")/"
                                 "(COUNTIF('Call Log'!$F$4:$F$600,\"Y\")+COUNTIF('Call Log'!$F$4:$F$600,\"N\")))",
      "aim for 100%"),
+    ("Active referral partners",
+     "=COUNTIF('Referral Partners'!$I$4:$I$200,\"Active - has sent one\")",
+     "people who have actually sent you someone"),
+    ("From outside the warm list",
+     "=IF(COUNTA('Referral Log'!$B$4:$B$400)=0,\"\","
+     "COUNTIFS('Referral Log'!$B$4:$B$400,\"<>Warm list\","
+     "'Referral Log'!$B$4:$B$400,\"<>\")/COUNTA('Referral Log'!$B$4:$B$400))",
+     "zero in month one is fine; still zero at month four means nothing replaced the list"),
 ]
 for label, formula, hint in SUMMARY:
     ws[f"B{r}"] = label
@@ -362,7 +428,7 @@ for label, formula, hint in SUMMARY:
     cell.fill = PatternFill("solid", fgColor=CALC_FILL)
     cell.border = BORDER
     cell.alignment = Alignment(horizontal="center")
-    if label == "Referral question asked":
+    if label in ("Referral question asked", "From outside the warm list"):
         cell.number_format = "0%"
     note(ws, f"E{r}", hint, size=9)
     r += 1
