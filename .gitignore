@@ -36,3 +36,19 @@ dist/
 tracker/Partner-Direct-Tracker.xlsx
 tracker/*-working.xlsx
 tracker/*-filled.xlsx
+
+# Marketing skill outputs
+MARKETING-AUDIT.md
+LANDING-PAGE-ANALYSIS.md
+SEO-AUDIT.md
+SOCIAL-CALENDAR.md
+COPY-ANALYSIS.md
+EMAIL-SEQUENCE.md
+FUNNEL-ANALYSIS.md
+BRAND-GUIDELINES.md
+AD-CREATIVE.md
+COMPETITIVE-ANALYSIS.md
+LAUNCH-PLAYBOOK.md
+MARKETING-PROPOSAL.md
+MARKETING-REPORT.md
+MARKETING-REPORT-*.pdf

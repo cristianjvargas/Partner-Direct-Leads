@@ -3,11 +3,13 @@
 Claude skills for lead sourcing, prospecting and deal work at a credit card processing /
 merchant services company.
 
-Two layers:
+Three layers:
 
 1. **`sales-*`** — a general B2B prospecting suite, vendored from
    [zubair-trabzada/ai-sales-team-claude](https://github.com/zubair-trabzada/ai-sales-team-claude) (MIT).
-2. **`merchant-*`** — a merchant-services layer written for this business, covering the things
+2. **`market-*`** — a marketing suite, vendored from
+   [zubair-trabzada/ai-marketing-claude](https://github.com/zubair-trabzada/ai-marketing-claude) (MIT).
+3. **`merchant-*`** — a merchant-services layer written for this business, covering the things
    generic B2B sales tooling gets wrong about card processing.
 
 ---
@@ -118,13 +120,35 @@ because over-promising loses the account, the referral network and eventually th
 
 ---
 
-## Notes on the upstream suite
+## The marketing layer
 
-`sales-*` is vendored rather than submoduled so the frontmatter fix travels with it. Upstream
-ships every `SKILL.md` and agent file **without YAML frontmatter**, which means Claude Code never
-loads them — they are inert as published. The `name:` and `description:` frontmatter here was
-added during vendoring; skill and agent bodies are otherwise upstream's, MIT licensed
-(`.claude/skills/sales/UPSTREAM-LICENSE`).
+Most relevant to the Partner Direct work:
+
+| Skill | Use |
+|---|---|
+| `market-funnel` | Map the lead funnel end to end and find where people leak out |
+| `market-landing` | Conversion review of the landing page before it goes live |
+| `market-seo` | The "findable" problem — what ranking is realistically available |
+| `market-brand` | Voice and positioning, so every channel sounds the same |
+| `market-copy` | Rewrite headlines and page copy |
+| `market-social` | Instagram and LinkedIn planning |
+
+**One caution.** The Launch Kit says *post once, don't become a payments account*, and bans rate
+figures and income screenshots. `market-social` and `market-ads` will happily generate a daily
+content plan — which is the opposite of that instruction. Use them for one good post, not a
+campaign, and run anything public past Clay and Jeremy first.
+
+## Notes on the upstream suites
+
+Both `sales-*` and `market-*` are vendored rather than submoduled so the frontmatter fix travels
+with them. Upstream ships every `SKILL.md` and agent file **without YAML frontmatter**, which
+means Claude Code never loads them — they are inert as published. The `name:` and `description:`
+frontmatter here was added during vendoring; bodies are otherwise upstream's, MIT licensed
+(`.claude/skills/sales/UPSTREAM-LICENSE`, `.claude/skills/market/UPSTREAM-LICENSE`).
+
+Descriptions were written to avoid collisions between the two suites — `market-competitors`
+analyses a competitor's marketing, while `sales-competitors` is about displacing an incumbent at
+a specific prospect. Same for `market-proposal` and `sales-proposal`.
 
 Upstream also installs to `~/.claude/` via `install.sh`. That is machine-local and does not
 survive a fresh container, so this repo vendors instead.
@@ -135,9 +159,14 @@ survive a fresh container, so this repo vendors instead.
 .claude/
   skills/
     sales/                        orchestrator + shared scripts/ and templates/
-    sales-*/                      13 upstream sub-skills
+    sales-*/                      13 upstream sales sub-skills
+    market/                       orchestrator + shared scripts/ and templates/
+    market-*/                     14 upstream marketing sub-skills
     merchant-*/                   6 merchant-services skills
-  agents/                         5 subagents used by sales-prospect
+  agents/                         10 subagents (5 sales, 5 marketing)
+tracker/
+  Partner-Direct-Tracker-TEMPLATE.xlsx
+  starter-leads-b2b-wholesale.csv
 tools/
   package_for_claude_ai.sh        build .zip bundles for claude.ai upload
 ```
